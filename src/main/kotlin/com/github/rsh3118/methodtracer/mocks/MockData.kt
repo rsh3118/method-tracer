@@ -121,7 +121,7 @@ class MockData{
                 var actionString = action.toString()
                 var selectedPrefix: String? = null
                 for(prefix in prefixes){
-                    println("checking if ${actionString} prefixed with ${prefix}")
+                    //println("checking if ${actionString} prefixed with ${prefix}")
                     if(actionString.startsWith(prefix)){
                         actionString = actionString.replace(prefix + "_", "")
                         selectedPrefix = prefix
@@ -211,6 +211,7 @@ class MockData{
                     IEDAAction.APPLICATION_METHOD_CREATE_USER,
                     IEDAAction.DB_METHOD_STORE_USER
             )
+
             addDownstreamDependency(
                     dMap,
                     IEDAAction.APPLICATION_METHOD_CREATE_USER,

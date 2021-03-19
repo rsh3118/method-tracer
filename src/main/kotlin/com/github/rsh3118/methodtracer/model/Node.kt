@@ -13,7 +13,7 @@ public class Node<T>(public val value: T) {
 
     fun addDownstreamDependency(node: Node<T>){
         directDownstreams.add(node)
-        node.directUpstreams.plus(node)
+        node.directUpstreams.add(this)
     }
 
     fun getTopLevelUpstreamDependencies(): Set<Node<T>>{
@@ -30,5 +30,11 @@ public class Node<T>(public val value: T) {
                 getTopLevelDependenciesHelper(topLevels, upstreamDependency)
             }
         }
+    }
+
+    override fun toString(): String {
+        val downstreamNames = this.directDownstreams.map { node -> node.value.toString()}
+        val upstreamNames  = this.directUpstreams.map{ node -> node.value.toString()}
+        return "value:${this.value.toString()}\ndownstreamDependencies:${downstreamNames}\nupstreamDependencies${upstreamNames}\n\n"
     }
 }

@@ -16,8 +16,10 @@ import com.github.rsh3118.methodtracer.model.ScheduledTaskClassDependency
 import com.github.rsh3118.methodtracer.model.ScheduledTaskMethodDependency
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.batik.transcoder.image.ImageTranscoder
+import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.Toolkit
 import java.awt.image.BufferedImage
 import javax.swing.ImageIcon
 import javax.swing.JTree
@@ -26,7 +28,7 @@ import javax.swing.tree.DefaultTreeCellRenderer
 import kotlin.reflect.KClass
 
 
-class DescriptionRenderer : DefaultTreeCellRenderer() {
+class DescriptionRenderer : DefaultTreeCellRenderer {
     var eyeIcon: ImageIcon
     var functionIcon: ImageIcon
     var warningIcon: ImageIcon
@@ -38,6 +40,10 @@ class DescriptionRenderer : DefaultTreeCellRenderer() {
     var classIcon: ImageIcon
     var apiIcon: ImageIcon
     var folderIcon: ImageIcon
+
+    constructor(): super(){
+        this.backgroundNonSelectionColor = Color(1f,1f,1f,0f )
+    }
 
 
     override fun getPreferredSize(): Dimension? {
@@ -53,66 +59,88 @@ class DescriptionRenderer : DefaultTreeCellRenderer() {
         super.getTreeCellRendererComponent(tree, "", sel, expanded, leaf,
                 row, hasFocus)
         val treeNode = value as DefaultMutableTreeNode
-        print(treeNode.userObject)
-        if(treeNode.userObject !is Dependency){
-            icon = functionIcon
-            text = "unknown"
+        if(treeNode.userObject is String){
+            this.icon = folderIcon
+            this.text = treeNode.userObject as String
             return this
         }
-        val dependency = value.userObject as Dependency
+        if(treeNode.userObject !is Description){
+            this.icon = functionIcon
+            this.text = "unknown"
+            return this
+        }
+        val description = value.userObject as Description
+        val dependency = description.dependency
         val dimension = super.getPreferredSize()
         dimension.height = 30
-        size = dimension
-        text = dependency.name
-        setIcon(dependency)
-
+        this.size = dimension
+        this.text = dependency.name
+        this.icon = setIcon(dependency)
+        if(description.status == Status.SELECTED){
+            if(sel){
+                this.foreground = Color(128, 203, 196)
+            }else{
+                this.foreground = Color(130, 170, 255)
+            }
+        }
+        if(description.status == Status.ERROR){
+            if(sel){
+                this.foreground = Color(247, 82, 110)
+            }else{
+                this.foreground = Color(247, 82, 110)
+            }
+        }
+        if(description.status == Status.COMPROMISED){
+            if(sel){
+                this.foreground = Color(245, 166, 135)
+            }else{
+                this.foreground = Color(245, 166, 135)
+            }
+        }
         return this
     }
 
-    private fun setIcon(dependency: Dependency){
+    private fun setIcon(dependency: Dependency): ImageIcon {
         if(dependency is SQSClassDependency){
-            icon = sqsIcon
+            return sqsIcon
         }
         if(dependency is DBClassDependency){
-            icon = dbIcon
+            return dbIcon
         }
         if(dependency is APIClassDependency){
-            icon = apiIcon
+            return apiIcon
         }
         if(dependency is ApplicationClassDependency){
-            icon = classIcon
+            return classIcon
         }
         if(dependency is ExternalServiceClassDependency){
-            icon = cloudIcon
+            return cloudIcon
         }
         if(dependency is ScheduledTaskClassDependency){
-            icon = scheduledIcon
+            return scheduledIcon
         }
         if(dependency is SQSMethodDependency){
-            icon = sqsIcon
+            return sqsIcon
         }
         if(dependency is DBMethodDependency){
-            icon = dbIcon
+            return dbIcon
         }
         if(dependency is APIMethodDependency){
-            icon = apiIcon
+            return apiIcon
         }
         if(dependency is ApplicationMethodDependency){
-            icon = functionIcon
+            return functionIcon
         }
         if(dependency is ExternalServiceMethodDependency){
-            icon = cloudIcon
+            return cloudIcon
         }
         if(dependency is ScheduledTaskMethodDependency){
-            icon = scheduledIcon
+            return scheduledIcon
         }
         if(dependency is Project){
-            icon = folderIcon
+            return folderIcon
         }
-    }
-
-    fun<T: Any> T.getClass(): KClass<T> {
-        return javaClass.kotlin
+        throw Exception();
     }
 
     companion object {
@@ -135,39 +163,9 @@ class DescriptionRenderer : DefaultTreeCellRenderer() {
         classIcon = createSVGIcon("/icons/svg/class.svg")
         apiIcon = createSVGIcon("/icons/svg/api.svg")
         folderIcon = createSVGIcon("/icons/svg/folder.svg")
-
-//        val transcoder = MyTranscoder()
-//
-//        val impl = SVGDOMImplementation.getDOMImplementation();
-//        val hints = TranscodingHints();
-//        hints.put(ImageTranscoder.KEY_WIDTH, 300.00); // e.g. width=new Float(300)
-//        hints.put(ImageTranscoder.KEY_HEIGHT, 300.00);// e.g. height=new Float(75)
-//        hints.put(ImageTranscoder.KEY_DOM_IMPLEMENTATION, impl);
-//        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT_NAMESPACE_URI, SVGConstants.SVG_NAMESPACE_URI);
-//        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT_NAMESPACE_URI,SVGConstants.SVG_NAMESPACE_URI);
-//        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT, SVGConstants.SVG_SVG_TAG);
-//        hints.put(ImageTranscoder.KEY_XML_PARSER_VALIDATING, false);
-//
-//        transcoder.setTranscodingHints(hints);
-//        val ti = TranscoderInput("/icons/class.svg")
-//        transcoder.transcode(ti, null);
-//        val image = transcoder.image
-
     }
 
     private fun createSVGIcon(url: String): ImageIcon {
         return ImageIcon(SVGImage(javaClass.getResource(url)).getImage(13,13))
     }
-}
-
-internal class MyTranscoder : ImageTranscoder() {
-    var image: BufferedImage? = null
-        private set
-
-    override fun createImage(w: Int, h: Int): BufferedImage {
-        image = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
-        return image as BufferedImage
-    }
-
-    override fun writeImage(img: BufferedImage?, out: TranscoderOutput?) {}
 }
